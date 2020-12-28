@@ -1603,25 +1603,139 @@ uscope.process.norm = function(data,colG,colR){
   
 }
 
+## 
+## Takes:
+## - a directory path where a screen is continued ()
+## - start position (e.g., C01 or E01) for the new set of images
+## - the screen name (the part of the image names that's before the underscore)
+## - PPW, the number of picture per well for that screen
+## - DOIT = 1 --> must be set to 1 to actually do the renaming, if not it will just print how things will be renamed.
+##
+## --> it will rename all the file in the current directory with the correct sNUM
+## 
+## AFTER RENAMING, the files can be moved to the main directory.
+##
 
-###
-### Merge multiple folders corresponding to the acquisition of one plate.
-### With 8PPW --> "Stage769", "E1.1"
-###
-### //!\\ position.stop should be the supposed number of pictures of the first folder to be kept as is + 1
-###
-### To replace the last two rows:
-### Example: merge.folders(c("/media/elmicro/Udi/SWAT_nop1pro_withNUP49_Cherry/SWAT-N_NUP49_p1v4","/media/elmicro/Udi/SWAT_nop1pro_withNUP49_Cherry/SWAT-N_NUP49_p1v4_last2rows/"),c(2689))
+#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1", START="M1", SCREEN_NAME = "image1", PPW=12, DOIT=1)
 
-### EX
-# merge.folders(folders=c("/media/elmicro/Yotam/for_udi/C_SWAT_diploids/plate_15_C2/Images","/media/elmicro/Yotam/for_udi/C_SWAT_diploids/plate_15_C2/Images_M_row_to_P_row"),positions.stop=c(2017))
+uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1", 
+                                           START="M1",
+                                           SCREEN_NAME = "image1",
+                                           PPW=12,
+                                           DOIT=0) {
+  if(grep(substring(START,1,1), c("C","E","G","I","K","M","O"))){
+    
+      print(paste("Now processing folder",FOLDER))
+      all.files = list.files(path=FOLDER)
+      WELLS = get.plate.wells(PPW)
+      S.first = grep(paste0(START,".1$"), WELLS)
+      print(paste("This folder contains images starting at well ",START))
+      print(paste("The s number corresponding to this position should have been",S.first))
+      print(paste("The s number of all the files will be changed and ",(S.first-1)," will be added"))
+      msg = readline(prompt="Are you OK with this? Y/N ")
+      if(msg == "Y"){
+        for( each.file in all.files){
+          s.number = as.numeric(sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri].*)$"), replacement="\\2", x=each.file, perl=TRUE))
+          if(!is.na(s.number)){
+            new.num = s.number + S.first-1
+            new.file = sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri].*)$"), replacement=paste0("\\1",new.num,"\\3"), x=each.file, perl=TRUE)
+            
+            print(paste0("RENAMING:",each.file, " ==> ", new.file ))
+            
+            if(DOIT){
+              file.rename( paste0(FOLDER,"/",each.file), to= paste0(FOLDER, "/", new.file))
+            }
+          }
+        }
+      }
+  } else {
+    print("A new screen must start at odd-numbered rows otherwise it cannot be merged")
+  }
+}
 
-# merge.folders(folders=c("/media/elmicro/Sapir/Codon_usage/180315/Images","/media/elmicro/Sapir/Codon_usage/180315/Images_from_J"),positions.stop=c(961))
+## 
+## Takes:
+## - A directory where all images will be copied (typically that's the "Images" or "Images_output" folder)
+## - A directory where a screen is continued -- YOU MUST HAVE APPLIED uscope.merge.screen.rename.sNum on that directory
+## - The screen name (the part of the image names that's before the underscore)
+## - DOIT = 1 --> must be set to 1 to actually do the renaming, if not it will just print how things will be renamed.
+##
+## --> it will MOVE all the files to the master Images directory. If images already exist with a particular sNUM, they will be moved to a BACKUP directory
+## 
 
-merge.folders = function(folders=
+uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
+                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
+                                  SCREEN_NAME = "image1",
+                                  DOIT=0) 
+
+uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
+                                             FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
+                                           SCREEN_NAME = "p21",
+                                           DOIT=0) {
+  
+  ## If folder ends with "/", we trim it
+  if(substr(FOLDER_DEST,nchar(FOLDER_DEST),nchar(FOLDER_DEST)) == "/"){
+    FOLDER_DEST = substr(FOLDER_DEST,1,nchar(FOLDER_DEST)-1)
+  }
+  
+  ## If folder ends with "/", we trim it
+  if(substr(FOLDER_SOURCE,nchar(FOLDER_SOURCE),nchar(FOLDER_SOURCE)) == "/"){
+    FOLDER_SOURCE = substr(FOLDER_SOURCE,1,nchar(FOLDER_SOURCE)-1)
+  }
+  
+  print(paste("The images in folder",FOLDER_SOURCE," will be moved to the folder",FOLDER_DEST))
+  print(paste("Images in",FOLDER_DEST," that already exist will be moved to ", paste0(FOLDER_DEST,"_BAKMERGE") ))
+  msg = readline(prompt="Are you OK with this? Y/N ")
+  
+  if(msg == "Y"){
+    
+    ### We will move all doubles to a new directory 
+    if( ! file.exists ( paste0(FOLDER_DEST,"_BAKMERGE") ) ){
+      print(paste0("Creating directory: ", FOLDER_DEST,"_BAKMERGE"))
+      dir.create(paste0(FOLDER_DEST,"_BAKMERGE"), showWarnings = TRUE)
+    } else {
+      print(paste0("Directory: ",FOLDER_DEST,"_BAKMERGE already exists"))
+    }
+    
+    all.files.source = list.files(path=FOLDER_SOURCE)
+    
+    for( each.file in all.files.source){
+      
+      if(length(grep('.nd$', each.file))==0){
+      
+        if( file.exists(paste0(FOLDER_DEST,"/",each.file)) ){
+          
+          print(paste0("Moving ",FOLDER_DEST,"/",each.file, "to= ", FOLDER_DEST, "_BAKMERGE/", each.file))
+          print(paste0("Moving ",FOLDER_SOURCE,"/",each.file, "to= ", FOLDER_DEST, "/", each.file))
+          if(DOIT){
+            file.rename( paste0(FOLDER_DEST,"/",each.file), to= paste0(FOLDER_DEST, "_BAKMERGE/", each.file))
+            file.rename( paste0(FOLDER_SOURCE,"/",each.file), to= paste0(FOLDER_DEST, "/", each.file))
+          }
+        } else {
+          print(paste0("Just moving ",FOLDER_SOURCE,"/",each.file, "to=", FOLDER_DEST, "/", each.file))
+          if(DOIT){
+            file.rename( paste0(FOLDER_SOURCE,"/",each.file), to= paste0(FOLDER_DEST, "/", each.file))
+          }
+        }
+      }
+    }
+  }
+}
+
+
+get.position.for.merge = function(well="P1", ppw=12){
+  
+  
+}
+
+
+merge.folders.old = function(folders=
                            c("/media/elusers/data/microscope/or/06noise/151213-YPD_005_Sat-1",
                              "/media/elusers/data/microscope/or/06noise/151213-YPD_005_Sat-1.2"),
                          positions.stop=c(769)){
+  
+
+    ## Make sure the position is correct with
   
   ## the first element of position.stop will be the first number taken by s1 from the next directory.  
   print(paste("Going through folder",folders[1]))
@@ -1645,12 +1759,12 @@ merge.folders = function(folders=
   new.index = positions.stop[1]
   
   for( each.file in stk.files){
-      s.number = as.numeric(sub(pattern="^.*_s([0-9]+)\\..*$", replacement="\\1", x=each.file, perl=TRUE))
-      print(paste(each.file, "S=",s.number))
-      if(s.number >= new.index){            
-          #print(paste("FROM: ",paste(folders[1],"/",each.file,sep="") , " TO=", paste(folders[1],"_BAKMERGE/",each.file,sep="")))
-          file.rename(paste(folders[1],"/",each.file,sep=""), to=paste(folders[1],"_BAKMERGE/",each.file,sep=""))
-      }
+    s.number = as.numeric(sub(pattern="^.*_s([0-9]+)\\..*$", replacement="\\1", x=each.file, perl=TRUE))
+    print(paste(each.file, "S=",s.number))
+    if(s.number >= new.index){            
+      #print(paste("FROM: ",paste(folders[1],"/",each.file,sep="") , " TO=", paste(folders[1],"_BAKMERGE/",each.file,sep="")))
+      file.rename(paste(folders[1],"/",each.file,sep=""), to=paste(folders[1],"_BAKMERGE/",each.file,sep=""))
+    }
   }
   
   ### Then I need to move all files from second directory to first directory
@@ -1658,35 +1772,38 @@ merge.folders = function(folders=
   stk.files = stk.files[ grepl(pattern=".*s([0-9]+)\\.tif$",x=stk.files) | grepl(pattern=".*s([0-9]+)\\.stk$",x=stk.files)  ]
   for( each.file in stk.files){
     #print(each.file)
-      s.number = as.numeric(sub(pattern="^.*_s([0-9]+)\\..*$", replacement="\\1", x=each.file, perl=TRUE))
-
-      ## Either this replacement matches 
-      new.file = sub("_s[0-9]+\\.",paste("_s",(s.number+new.index-1),"\\.",sep=""), each.file)
-      ## Or that one does
-      ## new.file = sub("_s[0-9]+-",paste("_s",(s.number+new.index-1),"-",sep=""), each.file)        
-      
-      #print(paste("FROM: ",paste(folders[2],"/",each.file,sep="") , " TO=", paste(folders[1],"/",new.file,sep="")))
-      
-      if( ! file.exists(paste(folders[1],"/",new.file,sep="")) ){
-          file.copy(from=paste(folders[2],"/",each.file,sep=""), to=paste(folders[1],"/",new.file,sep=""))        
-      }
+    s.number = as.numeric(sub(pattern="^.*_s([0-9]+)\\..*$", replacement="\\1", x=each.file, perl=TRUE))
+    
+    ## Either this replacement matches 
+    new.file = sub("_s[0-9]+\\.",paste("_s",(s.number+new.index-1),"\\.",sep=""), each.file)
+    ## Or that one does
+    ## new.file = sub("_s[0-9]+-",paste("_s",(s.number+new.index-1),"-",sep=""), each.file)        
+    
+    #print(paste("FROM: ",paste(folders[2],"/",each.file,sep="") , " TO=", paste(folders[1],"/",new.file,sep="")))
+    
+    if( ! file.exists(paste(folders[1],"/",new.file,sep="")) ){
+      file.copy(from=paste(folders[2],"/",each.file,sep=""), to=paste(folders[1],"/",new.file,sep=""))
+    } else {
+      print(paste("Problem: file",new.file," already exists in DIR1"))
+    }
   }
 }
 
 
-
 ## 
 ## After two folders have been merged, files should be renamed so that they are consistent.
+## 
+## --> THIS DOESN"T MAKE SENSE
 ##
 rename.basename.folder = function(folder, basename = "MayaGFP_plate91"){
-
-    stk.files = list.files(path=folder, pattern=".[stk|tif]$")
-    for (each.file in stk.files) {
-        file.second.part = sub(pattern="^(.*)(_w[0-9].*)$", replacement="\\2", x=each.file, perl=TRUE)
-        new.file = paste(basename, file.second.part, sep="")
-        file.rename(from=paste(folder,"/",each.file,sep=""), to=paste(folder,"/",new.file,sep=""))
-        #print(paste("FROM: ",paste(folder,"/",each.file,sep="") , " TO=", paste(folder,"/",new.file,sep="")))        
-    }    
+  
+  stk.files = list.files(path=folder, pattern=".[stk|tif]$")
+  for (each.file in stk.files) {
+    file.second.part = sub(pattern="^(.*)(_w[0-9].*)$", replacement="\\2", x=each.file, perl=TRUE)
+    new.file = paste(basename, file.second.part, sep="")
+    file.rename(from=paste(folder,"/",each.file,sep=""), to=paste(folder,"/",new.file,sep=""))
+    #print(paste("FROM: ",paste(folder,"/",each.file,sep="") , " TO=", paste(folder,"/",new.file,sep="")))        
+  }    
 }
 
 toto = function(){
@@ -1714,6 +1831,131 @@ toto = function(){
   K=K+1
   
 }    
+
+get.plate.wells = function(ppw=10){
+    
+  WELLS.NUM = 1:24
+  WELLS.LET = 1:16
+  WELLS.NUM.rev = WELLS.NUM[ length(WELLS.NUM):1]  
+  WELLS.times = ppw
+  
+  #print(paste("WELLS N=",WELLS.NUM))
+  #print(paste("WELLS L=",WELLS.LET))
+  
+  WELL.IDs = c()
+  PIC.NUM=0
+  EVEN.PASS = TRUE ## To ZIG-ZAG among wells
+  
+  for( well.letter in WELLS.LET ){
+    
+    if(EVEN.PASS){
+      WELLS.NUM.GO = WELLS.NUM
+      EVEN.PASS = FALSE
+    } else {
+      WELLS.NUM.GO = WELLS.NUM.rev
+      EVEN.PASS = TRUE
+    }
+    
+    for (well.num in WELLS.NUM.GO){
+        
+        for ( well.pic in 1:WELLS.times){
+          #WELL.IDs = c(WELL.IDs, paste(LETTERS[well.letter],well.num,'.',well.pic , sep="") )
+          
+          WELL.ID = paste(LETTERS[well.letter],well.num,'.',well.pic , sep="")
+          #print(WELL.ID)
+          WELL.IDs = c(WELL.IDs, WELL.ID)
+        }
+      }
+  }
+  return(WELL.IDs)
+}
+
+microscope.position.MM = function(file.path="./384_Joe_matrical.stg", PLATE = 384, NUM.from = 1, NUM.to=8, LET.from=1, LET.to=4, exclude=c() , TIMES=8, OFFSET=0){
+  
+  WELLS.NUM = NUM.from:NUM.to
+  WELLS.LET = LET.from:LET.to
+  WELLS.NUM.rev = WELLS.NUM[ length(WELLS.NUM):1]  
+  WELLS.times = TIMES
+  
+  print(paste("WELLS N=",WELLS.NUM))
+  print(paste("WELLS L=",WELLS.LET))
+  
+  file = c()
+  file = c(file, '"Stage Memory List", Version 5.0')
+  file = c(file, '0, 0, 0, 0, 0, 0, 0, "microns", "microns"' )
+  file = c(file, '0' )
+  file = c(file, length(WELLS.NUM)*length(WELLS.LET)*WELLS.times )
+  
+  X.init = 0
+  Y.init = 0  
+  
+  if(PLATE == 96){
+    WELL.sep = 9000
+  } else {
+    WELL.sep = 4500
+  }
+  
+  PIC.size  = 300
+  
+  ##    
+  #x.pos.in.well = rep( c(-4.5*PIC.size, -1.5*PIC.size, 1.5*PIC.size, 4.5*PIC.size,  4.5*PIC.size, 1.5*PIC.size, -1.5*PIC.size, -4.5*PIC.size) ,3)
+  #y.pos.in.well = rep( c( 4.5*PIC.size,  1.5*PIC.size,-1.5*PIC.size,-4.5*PIC.size), rep(4,4) )
+  
+  ##  Goes like this within each well:
+  ##      ------- |
+  ##     | -----| |
+  ##     | | >--| |
+  ##     | |------|
+  ##     |---------    
+  
+  x.pos.in.well = c(0 , 1.5*PIC.size, 1.5*PIC.size, 0, -1.5*PIC.size, -1.5*PIC.size, -1.5*PIC.size, 0, 1.5*PIC.size, 3*PIC.size, 3*PIC.size, 3*PIC.size, 3*PIC.size, 1.5*PIC.size, 0 , -1.5*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size, -1.5*PIC.size, 0*PIC.size, 1.5*PIC.size, 3*PIC.size)
+  y.pos.in.well = c(0, 0, 1.5*PIC.size, 1.5*PIC.size, 1.5*PIC.size,0, -1.5*PIC.size, -1.5*PIC.size, -1.5*PIC.size, -1.5*PIC.size,0, 1.5*PIC.size, 3*PIC.size, 3*PIC.size, 3*PIC.size, 3*PIC.size, 3*PIC.size, 1.5*PIC.size, 0*PIC.size, -1.5*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size, -3*PIC.size)
+  
+  
+  WELL.IDs = c()
+  
+  PIC.NUM=0
+  
+  EVEN.PASS = TRUE ## To ZIG-ZAG among wells
+  
+  for( well.letter in WELLS.LET ){
+    
+    if(EVEN.PASS){
+      WELLS.NUM.GO = WELLS.NUM
+      EVEN.PASS = FALSE
+    } else {
+      WELLS.NUM.GO = WELLS.NUM.rev
+      EVEN.PASS = TRUE
+    }
+    
+    for (well.num in WELLS.NUM.GO){
+      
+      Y = -(  Y.init + ( (-1+well.letter) * WELL.sep))
+      X = -(  X.init + ( (-1+well.num   ) * WELL.sep))
+      
+      if( ! paste(LETTERS[well.letter],well.num,sep="") %in% exclude){
+        
+        for ( well.pic in 1:WELLS.times){
+          
+          X.tmp.center = X
+          Y.tmp.center = Y
+          
+          X.tmp = X.tmp.center + x.pos.in.well[well.pic]
+          Y.tmp = Y.tmp.center + y.pos.in.well[well.pic]
+          
+          WELL.IDs = c(WELL.IDs, paste(LETTERS[well.letter],well.num,'.',well.pic , sep="") )
+          
+          WELL.ID = paste(LETTERS[well.letter],well.num,'.',well.pic , sep="")
+          
+          file = c(file, paste('"',WELL.ID,'"',", ",X.tmp,", ", Y.tmp,", 0, 0, 0, FALSE, -9999, TRUE, TRUE, 0",sep=""))
+          
+        }
+      }
+    }
+  }
+  #write.table(file, file="/home/elevy/.gvfs/elusers on mata.weizmann.ac.il/data/microscope/R/384-matrical.stg", quote=FALSE, eol="\r", row.names=FALSE, col.names=FALSE)
+  write.table(file, file=file.path, quote=FALSE, eol="\r", row.names=FALSE, col.names=FALSE)
+}
 
 
 ## Create Excel reports
