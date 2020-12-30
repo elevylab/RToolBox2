@@ -1622,7 +1622,7 @@ uscope.process.norm = function(data,colG,colR){
 
 #uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesE1", START="E1", SCREEN_NAME = "images1", PPW=12, DOIT=1)
 
-#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1", START="G1", SCREEN_NAME = "images1", PPW=12, DOIT=0)
+#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_13/ImagesE1", START="E1", SCREEN_NAME = "image1", PPW=12, DOIT=0)
 
 uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_13/ImagesE1", 
                                            START="E1",
@@ -1635,7 +1635,6 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
   print(paste0(""))
   if(grep(substring(START,1,1), c("C","E","G","I","K","M","O"))){
     
-      
       all.files = list.files(path=FOLDER)
 
       print(paste0("Now processing folder",FOLDER, " and ", length(all.files), " files were found"))
@@ -1703,10 +1702,10 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
 #                                  SCREEN_NAME = "image1",
 #                                  DOIT=1) 
 
-uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/Images/",
-                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1/",
-                                  SCREEN_NAME = "images1",
-                                  DOIT=0) 
+#uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/Images/",
+###                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1/",
+  #                                SCREEN_NAME = "images1",
+  #                                DOIT=0) 
 
 uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
                                              FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
