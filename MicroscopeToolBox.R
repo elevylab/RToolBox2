@@ -1617,16 +1617,47 @@ uscope.process.norm = function(data,colG,colR){
 ##
 
 #uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1", START="M1", SCREEN_NAME = "image1", PPW=12, DOIT=1)
+#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1", START="G1", SCREEN_NAME = "images1", PPW=12, DOIT=0)
 
-uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1", 
-                                           START="M1",
+
+#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesE1", START="E1", SCREEN_NAME = "images1", PPW=12, DOIT=1)
+
+#uscope.merge.screen.rename.sNum(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1", START="G1", SCREEN_NAME = "images1", PPW=12, DOIT=0)
+
+uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_13/ImagesE1", 
+                                           START="E1",
                                            SCREEN_NAME = "image1",
                                            PPW=12,
                                            DOIT=0) {
+  print(paste0("Please make sure to run this function with 'DOIT=0' at first, and check the output by hand in the file ~/merge_tmp1.txt"))
+  print(paste0(""))
+  print(paste0("If you are happy with the renaming described in that file, proceed to run this function with DOIT=1"))
+  print(paste0(""))
   if(grep(substring(START,1,1), c("C","E","G","I","K","M","O"))){
     
-      print(paste("Now processing folder",FOLDER))
+      
       all.files = list.files(path=FOLDER)
+
+      print(paste0("Now processing folder",FOLDER, " and ", length(all.files), " files were found"))
+      
+      if( length(grep(paste0("^",SCREEN_NAME,"[_s]"), all.files[1]))==0 ) {
+        print(paste0("Looks like you gave a wrong screen name: ",SCREEN_NAME, " doesn't match ",all.files[1] ))
+        return("Exiting")
+      }
+      
+      s.number.order = c()
+      
+      for( each.file in all.files){
+        s.number = as.numeric(sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri\\-].*)$"), replacement="\\2", x=each.file, perl=TRUE))
+        if(is.na(s.number)){
+          s.number.order = c(s.number.order,0)
+        } else {
+          s.number.order = c(s.number.order,s.number)
+        }
+      }
+      
+      all.files = all.files[order(s.number.order, decreasing=TRUE)]
+      
       WELLS = get.plate.wells(PPW)
       S.first = grep(paste0(START,".1$"), WELLS)
       print(paste("This folder contains images starting at well ",START))
@@ -1634,11 +1665,14 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
       print(paste("The s number of all the files will be changed and ",(S.first-1)," will be added"))
       msg = readline(prompt="Are you OK with this? Y/N ")
       if(msg == "Y"){
+        
+        sink(file="~/merge_tmp1.txt")
+        
         for( each.file in all.files){
-          s.number = as.numeric(sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri].*)$"), replacement="\\2", x=each.file, perl=TRUE))
+          s.number = as.numeric(sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri\\-].*)$"), replacement="\\2", x=each.file, perl=TRUE))
           if(!is.na(s.number)){
             new.num = s.number + S.first-1
-            new.file = sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri].*)$"), replacement=paste0("\\1",new.num,"\\3"), x=each.file, perl=TRUE)
+            new.file = sub(pattern=paste0("^(",SCREEN_NAME,".*_s)([0-9]+)([\\.Ri\\-].*)$"), replacement=paste0("\\1",new.num,"\\3"), x=each.file, perl=TRUE)
             
             print(paste0("RENAMING:",each.file, " ==> ", new.file ))
             
@@ -1647,6 +1681,7 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
             }
           }
         }
+        sink()
       }
   } else {
     print("A new screen must start at odd-numbered rows otherwise it cannot be merged")
@@ -1663,15 +1698,27 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
 ## --> it will MOVE all the files to the master Images directory. If images already exist with a particular sNUM, they will be moved to a BACKUP directory
 ## 
 
-uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
-                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
-                                  SCREEN_NAME = "image1",
+#uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
+#                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
+#                                  SCREEN_NAME = "image1",
+#                                  DOIT=1) 
+
+uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/Images/",
+                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_12/ImagesG1/",
+                                  SCREEN_NAME = "images1",
                                   DOIT=0) 
 
 uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
                                              FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
                                            SCREEN_NAME = "p21",
                                            DOIT=0) {
+  
+  print(paste0("This function must be run after 'uscope.merge.screen.rename.sNum'"))
+  print(paste0(""))
+  print(paste0("Please make sure to run this function with 'DOIT=0' at first, and check the output by hand in the file ~/merge_tmp2.txt"))
+  print(paste0(""))
+  print(paste0("If you are happy with the file moves described in that file, proceed and run this function again, with the option DOIT=1"))
+  print(paste0(""))
   
   ## If folder ends with "/", we trim it
   if(substr(FOLDER_DEST,nchar(FOLDER_DEST),nchar(FOLDER_DEST)) == "/"){
@@ -1684,18 +1731,20 @@ uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/
   }
   
   print(paste("The images in folder",FOLDER_SOURCE," will be moved to the folder",FOLDER_DEST))
-  print(paste("Images in",FOLDER_DEST," that already exist will be moved to ", paste0(FOLDER_DEST,"_BAKMERGE") ))
+  print(paste("Images in",FOLDER_DEST," that already exist will be moved to ", paste0(FOLDER_SOURCE,"_BAKMERGE") ))
   msg = readline(prompt="Are you OK with this? Y/N ")
   
   if(msg == "Y"){
     
     ### We will move all doubles to a new directory 
-    if( ! file.exists ( paste0(FOLDER_DEST,"_BAKMERGE") ) ){
-      print(paste0("Creating directory: ", FOLDER_DEST,"_BAKMERGE"))
-      dir.create(paste0(FOLDER_DEST,"_BAKMERGE"), showWarnings = TRUE)
+    if( ! file.exists ( paste0(FOLDER_SOURCE,"_BAKMERGE") ) ){
+      print(paste0("Creating directory: ", FOLDER_SOURCE,"_BAKMERGE"))
+      dir.create(paste0(FOLDER_SOURCE,"_BAKMERGE"), showWarnings = TRUE)
     } else {
-      print(paste0("Directory: ",FOLDER_DEST,"_BAKMERGE already exists"))
+      print(paste0("Directory: ",FOLDER_SOURCE,"_BAKMERGE already exists"))
     }
+    
+    sink(file="~/merge_tmp2.txt")
     
     all.files.source = list.files(path=FOLDER_SOURCE)
     
@@ -1705,20 +1754,21 @@ uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/
       
         if( file.exists(paste0(FOLDER_DEST,"/",each.file)) ){
           
-          print(paste0("Moving ",FOLDER_DEST,"/",each.file, "to= ", FOLDER_DEST, "_BAKMERGE/", each.file))
-          print(paste0("Moving ",FOLDER_SOURCE,"/",each.file, "to= ", FOLDER_DEST, "/", each.file))
+          print(paste0("Moving ",FOLDER_DEST,"/",each.file, " ===> ", FOLDER_SOURCE, "_BAKMERGE/", each.file))
+          print(paste0("Moving ",FOLDER_SOURCE,"/",each.file, " ===> ", FOLDER_DEST, "/", each.file))
           if(DOIT){
-            file.rename( paste0(FOLDER_DEST,"/",each.file), to= paste0(FOLDER_DEST, "_BAKMERGE/", each.file))
+            file.rename( paste0(FOLDER_DEST,"/",each.file), to= paste0(FOLDER_SOURCE, "_BAKMERGE/", each.file))
             file.rename( paste0(FOLDER_SOURCE,"/",each.file), to= paste0(FOLDER_DEST, "/", each.file))
           }
         } else {
-          print(paste0("Just moving ",FOLDER_SOURCE,"/",each.file, "to=", FOLDER_DEST, "/", each.file))
+          print(paste0("Just moving ",FOLDER_SOURCE,"/",each.file, " ===> ", FOLDER_DEST, "/", each.file))
           if(DOIT){
             file.rename( paste0(FOLDER_SOURCE,"/",each.file), to= paste0(FOLDER_DEST, "/", each.file))
           }
         }
       }
     }
+    sink()
   }
 }
 
