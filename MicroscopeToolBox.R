@@ -274,6 +274,8 @@ microscope.load.data = function(design){
   K=1
   cat("\n")
   NCOL_ALL = 0
+  HEADER = c()
+  
   for(each.plate in design$F){
     Nb.wells.witohut.res = 0
     
@@ -300,6 +302,7 @@ microscope.load.data = function(design){
       
       if( file.exists(res.file.name) ){                
         res.file = read.csv(res.file.name, sep="\t", row.names=c(1), stringsAsFactors=FALSE)
+        HEADER = colnames(res.file)
         cat(paste("It found a non empty file (",res.file.name,") and the number of columns is ",NCOL(res.file),"\n"))
         res.file$pic=1
 
@@ -342,6 +345,12 @@ microscope.load.data = function(design){
       
       if( file.exists(res.file.name) ){                
         res.file = read.csv(res.file.name, sep="\t", row.names=c(1), stringsAsFactors=FALSE)
+        
+        ## It seems that sometimes the column names get mixed up by the javascript, so lets check this
+        if( sum(colnames(res.file) == HEADER) != length(HEADER)  ){
+            print(paste("There is a problem with file s",N, " as the file header is different from the others and the number of cells in that file is", nrow(res.file),sep=""))
+        }
+        
         res.file$pic=PICNUM[N]
       }
       
