@@ -1711,10 +1711,10 @@ uscope.merge.screen.rename.sNum = function(FOLDER="/Volumes/elmicro/meta/phase/C
 #                                  SCREEN_NAME = "image1",
 #                                  DOIT=1) 
 
-uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_14/Images/",
-                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_14/ImagesG1/",
-                                SCREEN_NAME = "image1",
-                                DOIT=0) 
+#uscope.merge.screen.merge.two.dir(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_14/Images/",
+#                                  FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_14/ImagesG1/",
+#                                SCREEN_NAME = "image1",
+#                                DOIT=0) 
 
 uscope.merge.screen.merge.two.dir = function(FOLDER_DEST="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/Images/",
                                              FOLDER_SOURCE="/Volumes/elmicro/meta/phase/Conditions_phase_diagram/KO_library_with_P5O6/Ghil/full_screen/plate_9/ImagesM1/",
