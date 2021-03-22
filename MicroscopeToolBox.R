@@ -1,5 +1,5 @@
-source("/data/elevy/70_R_Data/bin/RToolBox/Multiwell.R")
-source("/data/elevy/70_R_Data/bin/RToolBox/general.R")
+source("https://raw.githubusercontent.com/elevylab/RToolBox2/main/Multiwell.R")
+source("https://raw.githubusercontent.com/elevylab/RToolBox2/main/general.R")
 
 ###
 ## Returns the design of an experiment 
@@ -377,7 +377,7 @@ microscope.load.data = function(design){
       
       WELL.tmp = WELLS[N]
       
-  }
+    }
 
       #for(each.well in 1:design$FORMAT){
 
@@ -443,22 +443,6 @@ uscope.process.estimate.background = function(data, design){
     return(design)  
 }
 
-###
-
-uscope.process.add.area = function(data){
-  
-  for(K in 1:length(data)){
-    
-    cols.to.sum = grep("OutofFocusbin[0-9]",colnames(data[[K]][[1]]))
-    
-    for(L in 1:length(data[[K]])){
-      
-      data[[K]][[L]]$area = rowSums( data[[K]][[L]][,cols.to.sum], na.rm=TRUE)
-    }
-  }
-  return(data)
-}
-
 
 uscope.process.add.ncells = function(data){
 
@@ -492,10 +476,10 @@ uscope.process.remove.first.pic = function(data){
         if(dim(data[[K]][[L]])[1] > 0){
  #           print(paste(K,L))
             data[[K]][[L]] = data[[K]][[L]][data[[K]][[L]]$pic>1,]
-            }
+        }
     }
   }
-    return(data)
+  return(data)
 }
 
 ###
@@ -511,6 +495,19 @@ uscope.process.remove.small = function(data, MIN.size=1000, MAX.size=2000){
         } else {
             data[[K]][[L]] = data[[K]][[L]][data[[K]][[L]]$area>MIN.size & data[[K]][[L]]$area < MAX.size,]
         }
+    }
+  }
+  return(data)
+}
+
+uscope.process.add.meanArea = function(data){
+  
+  for(K in 1:length(data)){
+    
+    for(L in 1:length(data[[K]])){
+      if(nrow(data[[K]][[L]]) > 0) {
+        data[[K]][[L]]$meanArea = mean(data[[K]][[L]]$area)
+      }
     }
   }
   return(data)
@@ -708,7 +705,7 @@ uscope.process.remove.background = function(data, design){
         col.of.interest = colnames(data[[K]][[L]])[col.of.interest]
         
         for( each.col in col.of.interest){
-          
+
           data[[K]][[L]][,each.col] = data[[K]][[L]][,each.col]- design$BACKGROUND[[K]][[each.ch]]
           below.zero = which(data[[K]][[L]][,each.col] < 0)
           if(length(below.zero)>0){
@@ -718,6 +715,30 @@ uscope.process.remove.background = function(data, design){
         }
       }
     }
+  }
+  return(data)
+}
+
+## 
+## Removes the background value to all values
+##
+uscope.process.rename.undefined = function(data){
+  
+  for(K in 1:length(data)){
+    
+      for( each.well in 1:length(data[[K]])){
+        for( each.col in 1:ncol(data[[K]][[each.well]])){
+          
+          undef.pos = grep("undefined",data[[K]][[each.well]][,each.col])
+          if( length(undef.pos)>0 ){
+            data[[K]][[each.well]][undef.pos,each.col] = NA
+          }
+          
+          if(typeof( typeof(data[[K]][[each.well]][1,each.col])) == "character" ){
+            data[[K]][[each.well]][,each.col] = as.numeric(as.vector(data[[K]][[each.well]][,each.col]))
+          }
+        }
+      }
   }
   return(data)
 }

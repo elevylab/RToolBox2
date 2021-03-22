@@ -2,7 +2,6 @@
 ### Set of general functions to work with multiwell plates
 ###
 
-
 get.384.by.col = function(){
     letters = rep(LETTERS[1:16],rep(16))
     numbers = gsub(" ","0",format(1:24,width=2))
