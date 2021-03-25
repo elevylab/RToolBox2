@@ -421,7 +421,7 @@ uscope.process.estimate.background = function(data, design){
         
         for(each.ch in design$CHANELS){
             
-            cols.fluo = intersect(grep("_int_b9",colnames(data[[K]][[1]])),grep(paste("^",each.ch,sep=""),colnames(data[[K]][[1]])))
+            cols.fluo = intersect(grep("_int_b9",colnames(data[[K]][[1]])),grep(paste("^",each.ch,"_",sep=""),colnames(data[[K]][[1]])))
             
             tmp=sapply(data[[K]],function(x){
                 if(length(x[,cols.fluo]) <= 20){
@@ -467,7 +467,7 @@ uscope.process.add.ncells = function(data){
 
 ###
 
-uscope.process.remove.first.pic = function(data){
+uscope.process.remove.first.pic = function(data, N=1){
   
   for(K in 1:length(data)){
     
@@ -475,7 +475,7 @@ uscope.process.remove.first.pic = function(data){
 #        print(paste(K,L))
         if(dim(data[[K]][[L]])[1] > 0){
  #           print(paste(K,L))
-            data[[K]][[L]] = data[[K]][[L]][data[[K]][[L]]$pic>1,]
+            data[[K]][[L]] = data[[K]][[L]][data[[K]][[L]]$pic>N,]
         }
     }
   }
@@ -506,7 +506,7 @@ uscope.process.add.meanArea = function(data){
     
     for(L in 1:length(data[[K]])){
       if(nrow(data[[K]][[L]]) > 0) {
-        data[[K]][[L]]$meanArea = mean(data[[K]][[L]]$area)
+        data[[K]][[L]]$meanArea = round(mean(data[[K]][[L]]$area))
       }
     }
   }
